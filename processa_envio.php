@@ -14,6 +14,7 @@
         private $para = null;
         private $assunto = null;
         private $mensagem = null;
+        public  $status = array('codigo_status'=> null, 'descricao_status' => null);
 
         public function __get($atributo){
             return $this->$atributo;
@@ -41,14 +42,14 @@
 
 
     if(!$mensagem->mensagemValida()){
-        echo "mensagem não é validada";
-        die();
+    
+        header('Location: index.php');
     }
 
     $mail = new PHPMailer(true);
     try {
         //Server settings
-        $mail->SMTPDebug = 2;                                 // Enable verbose debug output
+        $mail->SMTPDebug = false;                                 // Enable verbose debug output
         $mail->isSMTP();                                      // Set mailer to use SMTP
         $mail->Host = 'smtp.gmail.com';  // Specify main and backup SMTP servers
         $mail->SMTPAuth = true;                               // Enable SMTP authentication
@@ -58,8 +59,8 @@
         $mail->Port = 587;                                    // TCP port to connect to
     
         //Recipients
-        $mail->setFrom('hostappsendmail@gmail.com', 'Web completo rementente');
-        $mail->addAddress('hostappsendmail@gmail.com', 'Web completo Destinatario');     // Add a recipient
+        $mail->setFrom('hostappsendmail@gmail.com', 'App send Mail');
+        $mail->addAddress($mensagem->__get('para'));     // Add a recipient
         // $mail->addReplyTo('info@example.com', 'Information');
         //$mail->addCC('cc@example.com');
         //$mail->addBCC('bcc@example.com');
@@ -70,17 +71,67 @@
     
         //Content
         $mail->isHTML(true);                                  // Set email format to HTML
-        $mail->Subject = 'oi eu sou o assunto';
-        $mail->Body    = 'oi eu sou o conteudo do <strong>email</strong>';
-        $mail->AltBody = 'oi eu sou o conteudo do email';
+        $mail->Subject = $mensagem->__get('assunto');
+        $mail->Body    = $mensagem->__get('mensagem');
+        $mail->AltBody = 'Seu provedor de email não suporta HTML';
     
         $mail->send();
-        echo 'Message has been sent';
+        $mensagem->status['codigo_status'] = 1;
+        $mensagem->status['descricao'] = 'E-mail enviado com sucesso';
     } catch (Exception $e) {
-        echo 'Não foi possível enviar este e-mail! Por favor tente mais tarde';
-        echo 'Detalhes do erro ' . $mail->ErrorInfo;
+        $mensagem->status['codigo_status'] = 1;
+        $mensagem->status['descricao'] = 'Não foi possível enviar este e-mail! Por favor tente mais tarde' . $mail->ErrorInfo;;
+   
     }
 
+?>
+
+<!DOCTYPE html>
+<html >
+        <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+            <title>Email enviado</title>
+        </head>
+        <body>
+
+           <div class="container">
+            <div class="py-3 text-center">
+                    <img class="d-block mx-auto mb-2" src="logo.png" alt="" width="72" height="72">
+                    <h2>Send Mail</h2>
+                    <p class="lead">Seu app de envio de e-mails particular!</p>
+             </div>
+           </div>
+
+            <div clas="row">
+               <div class="col-md-12">
+
+                   <?php if ($mensagem->status['codigo_status'] == 1){ ?>
+
+                     <div class="container">
+                        <h1 class="display-4 text-success">Sucesso</h1>
+                        <p><?php $mensagem->status['descricao_status'] ?></p>
+                        <a href="index.php" class="btn btn-success btn-lg mt-5 text-white">Voltar</a>
+                     </div>
+
+                   <?php } ?>
+                   <?php if ($mensagem->status['codigo_status'] == 2){ ?>
+
+                    <div class="container">
+                        <h1 class="display-4 text-danger">Ops</h1>
+                        <p><?php $mensagem->status['descricao_status'] ?></p>
+                        <a href="index.php" class="btn btn-success btn-lg mt-5 text-white">Voltar</a>
+                    </div>
+
+                    <?php } ?>
+               </div>
+            </div>
+
+            
+        </body>
+</html>
 
 
 
